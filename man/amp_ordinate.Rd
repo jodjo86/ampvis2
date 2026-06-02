@@ -17,6 +17,7 @@ amp_ordinate(
   sample_color_by = NULL,
   sample_color_order = NULL,
   sample_shape_by = NULL,
+  sample_spider = FALSE,
   sample_colorframe = FALSE,
   sample_colorframe_label = NULL,
   sample_colorframe_label_size = 3,
@@ -94,6 +95,8 @@ Default is \code{bray}.}
 \item{sample_color_order}{Order the colors in \code{sample_color_by} by the order in a vector.}
 
 \item{sample_shape_by}{Shape sample points by a variable in the metadata.}
+
+\item{sample_spider}{Connect the sample points to their group centroid with lines to create a spider plot, split by the variable defined by \code{sample_color_by}, or simply \code{TRUE} to draw the spider plot based on the variable in \code{sample_color_by}. (\emph{default:} \code{FALSE}) \note{Arithmetic mean centroids are mathematically rigorous for Euclidean-based ordinations (PCA, PCoA, RDA), but serve as approximations or are less suitable for others methods (NMDS, CCA, CA).}}
 
 \item{sample_colorframe}{Frame the sample points with a polygon by a variable in the metadata split by the variable defined by \code{sample_color_by}, or simply \code{TRUE} to frame the points colored by \code{sample_color_by}. (\emph{default:} \code{FALSE})}
 

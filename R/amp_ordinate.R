@@ -35,6 +35,7 @@
 #' @param sample_label_size Sample labels text size. (\emph{default:} \code{4})
 #' @param sample_label_segment_color Sample labels repel-segment color. (\emph{default:} \code{"black"})
 #' @param sample_shape_by Shape sample points by a variable in the metadata.
+#' @param sample_spider Connect the sample points to their group centroid with lines to create a spider plot, split by the variable defined by \code{sample_color_by}, or simply \code{TRUE} to draw the spider plot based on the variable in \code{sample_color_by}. (\emph{default:} \code{FALSE}) \note{Arithmetic mean centroids are mathematically rigorous for Euclidean-based ordinations (PCA, PCoA, RDA), but serve as approximations or are less suitable for others methods (NMDS, CCA, CA).}
 #' @param sample_colorframe Frame the sample points with a polygon by a variable in the metadata split by the variable defined by \code{sample_color_by}, or simply \code{TRUE} to frame the points colored by \code{sample_color_by}. (\emph{default:} \code{FALSE})
 #' @param sample_colorframe_label Label by a variable in the metadata.
 #' @param sample_colorframe_label_size Size of the color frame labels. (\emph{default:} \code{3})
@@ -162,6 +163,7 @@ amp_ordinate <- function(data,
                          sample_color_by = NULL,
                          sample_color_order = NULL,
                          sample_shape_by = NULL,
+                         sample_spider = FALSE,
                          sample_colorframe = FALSE,
                          sample_colorframe_label = NULL,
                          sample_colorframe_label_size = 3,
@@ -562,6 +564,50 @@ amp_ordinate <- function(data,
       hulls <- do.call(rbind, splitData)
       plot <- plot + geom_polygon(data = hulls, aes_string(fill = sample_color_by, group = "colorframeGroup"), alpha = 0.2 * opacity)
     }
+  }
+  
+  ##### Spider plot #####
+  if (!identical(sample_spider, FALSE)) {
+    if (is.null(sample_color_by) && identical(sample_spider, TRUE)) {
+      stop("sample_spider requires sample_color_by or a grouping variable.", call. = FALSE)
+    }
+    if (identical(sample_spider, TRUE)) {
+      spider_group <- sample_color_by
+    } else {
+      spider_group <- sample_spider
+    }
+    
+    # centroids
+    centroids <- dsites %>%
+      dplyr::group_by(.data[[spider_group]]) %>%
+      dplyr::summarise(
+        cx = mean(.data[[x_axis_name]]),
+        cy = mean(.data[[y_axis_name]]),
+        .groups = "drop"
+      )
+    
+    spider_df <- merge(
+      dsites,
+      centroids,
+      by.x = spider_group,
+      by.y = spider_group
+    )
+    
+    # Segments point
+    plot <- plot +
+      geom_segment(
+        data = spider_df,
+        aes_string(
+          x = x_axis_name,
+          y = y_axis_name,
+          xend = "cx",
+          yend = "cy",
+          colour = spider_group
+        ),
+        alpha = 0.5 * opacity,
+        linewidth = 0.4,
+        inherit.aes = FALSE
+      )
   }
 
   ##### Plot sample points  #####
