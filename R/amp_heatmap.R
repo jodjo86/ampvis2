@@ -457,8 +457,9 @@ amp_heatmap <- function(data,
   ## Define the output
   if (!isTRUE(textmap)) {
     ## Make a heatmap style plot
-    heatmap <- ggplot(abund7, aes_string(x = ".Group", y = "Display", label = formatC("Abundance", format = "f", digits = 1))) +
-      geom_tile(aes(fill = Abundance), colour = "white", size = 0.5) +
+    abund7$Abundance_label <- formatC(abund7$Abundance, format="f", digits=1)
+    heatmap <- ggplot(abund7, aes(x = .data[[".Group"]], y = .data[["Display"]], label = Abundance_label)) +
+      geom_tile(aes(fill = Abundance), colour = "white", linewidth = 0.5) +
       theme(
         axis.text.y = element_text(size = 12, color = "black", vjust = 0.4),
         axis.text.x = element_text(size = 10, color = "black", vjust = 0.5, angle = 90, hjust = 1),
