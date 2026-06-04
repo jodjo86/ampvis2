@@ -35,7 +35,7 @@
 #' @param sample_label_size Sample labels text size. (\emph{default:} \code{4})
 #' @param sample_label_segment_color Sample labels repel-segment color. (\emph{default:} \code{"black"})
 #' @param sample_shape_by Shape sample points by a variable in the metadata.
-#' @param sample_spider Connect the sample points to their group centroid with lines to create a spider plot, split by the variable defined by \code{sample_color_by}, or simply \code{TRUE} to draw the spider plot based on the variable in \code{sample_color_by}. (\emph{default:} \code{FALSE}) Note: Arithmetic mean centroids are mathematically rigorous for Euclidean-based ordinations (PCA, PCoA, RDA), but serve as approximations or are less suitable for others methods (NMDS, CCA, CA).
+#' @param sample_spider Connect the sample points to their group centroid with lines to create a spider plot, split by the grouping variable defined by \code{sample_color_by}, or overridden by \code{sample_colorframe} if provided, or simply \code{TRUE} to draw the spider plot based on the same grouping logic. (\emph{default:} \code{FALSE}) Note: Arithmetic mean centroids are mathematically rigorous for Euclidean-based ordinations (PCA, PCoA, RDA), but serve as approximations or are less suitable for others methods (NMDS, CCA, CA).
 #' @param sample_colorframe Frame the sample points with a polygon by a variable in the metadata split by the variable defined by \code{sample_color_by}, or simply \code{TRUE} to frame the points colored by \code{sample_color_by}. (\emph{default:} \code{FALSE})
 #' @param sample_colorframe_label Label by a variable in the metadata.
 #' @param sample_colorframe_label_size Size of the color frame labels. (\emph{default:} \code{3})
@@ -215,6 +215,10 @@ amp_ordinate <- function(data,
     stop("Ordination cannot be performed on 2 or fewer samples (the number of resulting axes will always be n-1, where n is the number of samples).", call. = FALSE)
   }
 
+  if (is.null(sample_color_by) & !is.logical(sample_spider) & !is.null(sample_spider)) {
+    sample_color_by <- sample_spider
+  }
+  
   if (is.null(sample_color_by) & !is.logical(sample_colorframe) & !is.null(sample_colorframe)) {
     sample_color_by <- sample_colorframe
   }
@@ -571,9 +575,14 @@ amp_ordinate <- function(data,
     if (is.null(sample_color_by) && identical(sample_spider, TRUE)) {
       stop("sample_spider requires sample_color_by or a grouping variable.", call. = FALSE)
     }
-    if (identical(sample_spider, TRUE)) {
-      spider_group <- sample_color_by
-    } else {
+    spider_group <- sample_color_by
+    
+    if (!is.logical(sample_colorframe) && !is.null(sample_colorframe)) {
+      spider_group <- sample_colorframe
+    }
+    
+    # override only if user explicitly passes a variable
+    if (!identical(sample_spider, TRUE) && !is.null(sample_spider)) {
       spider_group <- sample_spider
     }
     
@@ -628,12 +637,12 @@ amp_ordinate <- function(data,
         aes(text = data_plotly)
       )) + # HER
       theme_minimal() +
-      theme(axis.line = element_line(colour = "black", size = 0.5))
+      theme(axis.line = element_line(colour = "black", linewidth = 0.5))
   } else {
     plot <- plot +
       geom_point(size = sample_point_size, alpha = opacity) +
       theme_minimal() +
-      theme(axis.line = element_line(colour = "black", size = 0.5))
+      theme(axis.line = element_line(colour = "black", linewidth = 0.5))
   }
 
   # Only eigenvalue-based ordination methods can be displayed with % on axes
